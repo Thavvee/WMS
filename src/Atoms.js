@@ -28,3 +28,13 @@ export const productListState = atom({
   key: 'productListState',
   default: []
 });
+
+export const zoneSelectedState = atom({
+  key: 'zoneSelectedState',
+  default: []
+})
+
+export const productSelectedState = atom({
+  key: 'productSelectedState',
+  default: ''
+});

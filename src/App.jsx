@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Login from './login'
 import MapComponent_113_B from './W113_b'
 import Map_test from './W113_a_test'
+import Map_select from './map_select'
 import MapComponent_113_A from './W113_a'
 import './App.css'
 import Profile from './Profile'
@@ -214,6 +215,7 @@ function App() {
     <Route path="test" element={<Map_test/>}/>
     <Route path="map113/ZONE_A" element={<MapComponent_113_A/>}/>
     <Route path="test_m" element={<Profile/>}/>
+    <Route path="Map_select" element={<Map_select/>}/>
     {/* <Route path="test_dnd" element={<Test_dnd/>}/> */}
     <Route path="map113" element={<MapComponent/>}/>
     <Route path="map113/ZONE_B" element={<MapComponent_113_B/>}/>

@@ -1,28 +1,151 @@
-import React, { useState } from 'react';
+import React, { useState,useTransition } from 'react';
 import { Tooltip, Box, Card,StackDivider,FormControl,FormLabel,HStack, CardHeader, CardBody, Text, Select,Flex,Center,Square,Container, VStack, flexbox } from "@chakra-ui/react";
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { Grid, Button, Input,ButtonGroup, GridItem,Heading,Divider,CardFooter } from '@chakra-ui/react'
 import MapComponent_1 from './Profile';
+import Productinput from './Productinput';
+import Map_Select from './map_select';
+import DrawerExample from './Drawer';
 import Product_data from './test';
 import { useRecoilState } from 'recoil';
-import { hoveredZoneState, clickedZoneState } from './Atoms';
+import { useRecoilValue } from 'recoil';
+import { hoveredZoneState, clickedZoneState,productSelectedState,zoneSelectedState } from './Atoms';
+import { unstable_startTransition as startTransition } from 'react';
+import {
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  useDisclosure,  
+} from '@chakra-ui/react'
+
+import Map_warehouse from '../public/assets/img/map_warehouse.svg';
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tfoot,
+  Tr,
+  Th,
+  Td,
+  TableCaption,
+  TableContainer,
+} from '@chakra-ui/react'
+import Map_select from './map_select';
+
+
+
+// function DrawerExample({ isOpen, onClose, btnRef, handleProductSelect })  {
+
+
+//   return (
+//     <Drawer size={'lg'} isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={btnRef}>
+//       <DrawerOverlay />
+//       <DrawerContent>
+//         <DrawerCloseButton />
+//         <DrawerHeader>Job List</DrawerHeader>
+//         <DrawerBody>
+//         <TableContainer >
+//   <Table variant='simple'>
+//     <TableCaption>Imperial to metric conversion factors</TableCaption>
+//     <Thead>
+//       <Tr>
+//         <Th>Product info</Th>
+//         <Th>from</Th>
+//         <Th >to</Th>
+//         <Th isNumeric>Pallet</Th>
+//         <Th></Th>
+//       </Tr>
+//     </Thead>
+//     <Tbody>
+//       <Tr>
+//         <Td>ZCA123000008xxx</Td>
+//         <Td>XXX</Td>
+//         <Td >HS7</Td>
+//         <Td isNumeric> 40</Td>
+//         <Button onClick={() => handleProductSelect({ id: 'ZCA123000008xxx', from: 'XXX', to: 'HS7', pallet: 40 })}>
+//     Select Product
+//   </Button>
+//       </Tr>
+//       <Tr >
+//       <Td>ZCA123000008xxx</Td>
+//         <Td>XXX</Td>
+//         <Td >HS8</Td>
+//         <Td isNumeric> 40</Td>
+//         <Td><Button >
+//           Open
+//         </Button></Td>
+        
+//       </Tr>
+//       <Tr>
+//       <Td>ZCA123000008xxx</Td>
+//         <Td>XXX</Td>
+//         <Td >HS9</Td>
+//         <Td isNumeric>  40</Td>
+//         <Td><Button>Select Product</Button></Td>
+//       </Tr>
+//       <Tr>
+//       <Td>ZCA123000008xxx</Td>
+//         <Td>XXX</Td>
+//         <Td >HS9</Td>
+//         <Td isNumeric>  40</Td>
+//         <Td><Button>Select Product</Button></Td>
+//       </Tr>
+//       <Tr>
+//       <Td>ZCA123000008xxx</Td>
+//         <Td>XXX</Td>
+//         <Td >HS9</Td>
+//         <Td isNumeric>  40</Td>
+//         <Td><Button>Select Product</Button></Td>
+//       </Tr>
+//       <Tr>
+//       <Td>ZCA123000008xxx</Td>
+//         <Td>XXX</Td>
+//         <Td >HS9</Td>
+//         <Td isNumeric>  40</Td>
+//         <Td><Button>Select Product</Button></Td>
+//       </Tr>
+//     </Tbody>
+    
+//   </Table>
+// </TableContainer>
+//         </DrawerBody>
+//         <DrawerFooter>
+//           <Button variant="outline" mr={3} onClick={onClose}>
+//             Cancel
+//           </Button>
+//           <Button colorScheme="blue">Save</Button>
+//         </DrawerFooter>
+//       </DrawerContent>
+//     </Drawer>
+//   );
+// }
+
 
 
 const MapComponent = () => {
-  const [hoveredZone, setHoveredZone] = useRecoilState(hoveredZoneState);
-  const [clickedZone, setClickedZone] = useRecoilState(clickedZoneState);
+  const [productSelected, setProductSelected] = useRecoilState(productSelectedState);
+  const [hoveredZone, setHoveredZone] = useState(null);
+  const [isPending, startTransition] = useTransition();
+  const [selectedProduct, setselectedProduct] = useState(null);
+  const [clickedZone, setClickedZone] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const btnRef = React.useRef()
+  const [isMapSelected, setIsMapSelected] = useState(false);
   const [suggestInfo, setSugestInfo] = [
     { id:1 ,zone:'W1',location:'',pallet:'1-10'}
   ];
-  
+  const [zoneSelected, setZoneSelected] = useRecoilState(zoneSelectedState);
 
+
+  const [showMap, setShowMap] = useState(false);
   const [zones, setZones] = useState([
-    { id: 1, x: 70, y: 68, name: 'Zone_A', info: 'Information about Zone A',width: 108, height: 400,clippath: "polygon(0% 0%, 70% 0%, 100% 20%, 100% 100%, 0% 100%)" },
-    { id: 2, x: 224, y: 125, name: 'Zone_B', info: 'Information about Zone B',width: 148, height: 340,clippath: "polygon(0% 0%, 0% 0%, 100% 50%, 100% 100%, 0% 100%)"  },
-    { id: 3, x: 417, y: 345, name: 'Zone_C', info: 'Information about Zone B',width: 52, height: 120,clippath: "polygon(0% 0%, 0% 0%, 100% 50%, 100% 100%, 0% 100%)"  },
-    { id: 4, x: 78, y: 505, name: 'Zone_E', info: 'Information about Zone B',width: 100, height: 185  },
-    { id: 5, x: 225, y: 505, name: 'Zone_E', info: 'Information about Zone B',width: 100, height: 185  },
-    { id: 6, x: 370, y: 505, name: 'Zone_F', info: 'Information about Zone B',width: 100, height: 185  },
+
+    { id: 2, x: 570, y: 60,name: 'Zone_B', info: 'Information about Zone B',width: 75, height: 140,clippath: "polygon(0% 0%, 0% 0%, 100% 50%, 100% 100%, 0% 100%)", mapid:'113'   },
+
     // { id: 2, x: 107, y: 129, name: 'Zone B', info: 'Information about Zone B' },
     // { id: 3, x: 132, y: 129, name: 'Zone C', info: 'Information about Zone C' },
     // { id: 4, x: 157, y: 129, name: 'Zone D', info: 'Information about Zone D' },
@@ -49,28 +172,26 @@ const MapComponent = () => {
     setHoveredZone(hoveredZone);
   };
 
-  const handleZoneClick = (zoneId,zoneName) => {
-    // const clickedZone = zones.find(item => item.id === zoneId);
-    // setClickedZone(clickedZone);
-    window.location.href = `map113/${zoneName}`;
-    // window.location.href = `/profile/${clickedZone.id}`;
+  const handleZoneClick = (zoneId) => {
+    startTransition(() => {
+      setClickedZone(zoneId);
+    });
   };
 
-  const handleCloseModal = () => {
-    setClickedZone(null);
+
+  const handleProductSelect = (product) => {
+    setselectedProduct(product);
+    setProductSelected(product);
+    onClose();  // Close the drawer
+  };
+  const renderZoneComponent = () => {
+    if (clickedZone === 113) {
+      return <Map_select />;
+    }
+    return <>No</>;
   };
 
-  const handleUpdateInfo = (zoneId, newInfo) => {
-    setZones(prevZones => prevZones.map(zone => {
-      if (zone.id === zoneId) {
-        return {
-          ...zone,
-          info: newInfo,
-        };
-      }
-      return zone;
-    }));
-  };
+
   const [selectedOption, setSelectedOption] = useState(null);
 
 
@@ -94,7 +215,9 @@ const MapComponent = () => {
     setZones_U([...zones_U]); // This triggers a re-render
   };
   
-  
+  const handleBackClick = () => {
+    setIsMapSelected(false); // ย้อนกลับไปยัง Map_Select
+  };
 
 
   const [editedValues, setEditedValues] = useState({});
@@ -134,6 +257,7 @@ const MapComponent = () => {
   };
 
 
+
   return (
 
     
@@ -152,43 +276,56 @@ const MapComponent = () => {
 
   <TabPanels>
     <TabPanel>
-    <Box maxW='xl' marginBottom='1rem' >
-      <Select placeholder='Select option'
-      bg='#614AEB'
-      color='white'
-      >
-  <option value='option1'>ZCAWC020100001 WIP ไม้ฝา Non-A ตราช้าง 15x300x0.8 ซม.
-</option>
-  <option value='option2'>ZCAXXXXXX2 WIP ไม้ฝา Non-A ตราช้าง 15x300x0.8 ซม.</option>
-  <option value='option3'>ZCAXXXXXX2 WIP ไม้ฝา Non-A ตราช้าง 15x300x0.8 ซม.</option>
-</Select>
-  </Box>
+    <div>
+ 
+       <Grid
+  h='100vh'
+  templateRows='repeat(2, 1fr)'
+  templateColumns='5fr 20rem'
+  gap={4}
+>
 
+
+
+<GridItem rowSpan={2} colSpan={1}>  
+    
+
+{isPending ? "Loading..." : null}
      
+      {clickedZone === '113' ? 
+      <div> <Button onClick={() => setClickedZone(null)}>ย้อนกลับ</Button> 
+      <Map_Select /> 
+      </div>
+      : (
 
-    <div className='column' style={{
-      flex: '3',  // this makes the map take up 3 parts of space
-       marginRight: '2rem',
-       position: 'relative' // space between the map and newCard
-   }}>
-  <div style={{  width: '580px',  overflow: 'auto', boxShadow: '10px 10px rgba(0, 0, 0, 0.8)',backgroundColor: 'white' ,justifyContent:'center', borderRadius:'10px',paddingLeft:'2rem',paddingRight:'2rem',paddingTop:'0.5rem'}}> {/* Adjust width and height as needed */}
-      
-      <img
-        src="../assets/img/map-1.png"
-        alt="Clickable Map"
-        style={{ cursor: 'pointer', width: '100%', position: 'relative' }} // width set to 100% to fill the parent container
-      />
-     {zones.map((zone) => (
- <Tooltip key={zone.id} label={` ${zone.name}`} aria-label="Zone tooltip">
+          <Box p='5' style={{ height: '100%', overflow: 'auto' }} bg='white'>
+          <Heading> Warehouse Layout</Heading>
+          <Divider m='1'/>
+
+   
+            <div
+              style={{
+                width: '900px',  // กำหนดให้มีขนาดเต็ม Box
+                height: '450px',  // กำหนดให้มีขนาดเต็ม Box
+                position: 'relative',
+                backgroundImage: `url(${Map_warehouse})`,
+                backgroundSize: '100% 100%',  // ให้รูปภาพครอบคลุมทั้ง Box
+                backgroundPosition: 'center',  // จัดตำแหน่งรูปภาพให้อยู่ตรงกลาง
+              }}
+            >
+              
+            {zones.map((zone) => (
+ <Tooltip hasArrow key={zone.id} label={` ${zone.name}`} aria-label="Zone tooltip">
     <div
   style={{
     position: "absolute",
     left: `${zone.x}px`,
     top: `${zone.y}px`,
+    zIndex: 2
   }}
-  onMouseEnter={() => handleZoneHover(zone.id)}
+  onMouseEnter={() => handleZoneHover(zone.mapid)}
   onMouseLeave={() => setHoveredZone(null)}
-  onClick={() => handleZoneClick(zone.id,zone.name)}
+  onClick={() => handleZoneClick(zone.mapid,zone.name)}
 >
   <div
     style={{
@@ -204,26 +341,92 @@ const MapComponent = () => {
   </Tooltip>
 ))}
 
-      {clickedZone && (
-        <div
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            padding: '1px',
-            borderRadius: '5px',
-            boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
-            zIndex: 9999,
-          }}
-        >
-       
-        </div>
-      )}
+           
+
       </div>
+      
+    
+ 
+          </Box>
+
+
+)}
+
+                  </GridItem>
+    
+                  <GridItem colSpan={1} rowSpan={2} bg='white' >
+                  <Box p='5' bg='white'>
+                  <Heading>Select Product</Heading>
+         
+          <Divider m='1'/>
+          {productSelected ? ( <div className="product-card">
+          <h3>Selected Product</h3>
+          <p>ID: {productSelected.id}</p>
+          <p>From: {productSelected.from}</p>
+          <p>To: {productSelected.to}</p>
+          <p>Pallet: {productSelected.pallet}</p>
+        </div>
+         ):( 
+        
+        <>
+        <Text>PLS SELECT YOUR PRODUCT</Text> <Button ref={btnRef} colorScheme='teal' onClick={onOpen}>
+        Open
+      </Button></>)
+          }
+         
+     
+
+         <DrawerExample isOpen={isOpen} onClose={onClose} btnRef={btnRef} handleProductSelect={handleProductSelect} />
+
+</Box>
+
+<Box p='5'  bg='white'>
+                  <Heading>Select Location</Heading>
+          <Divider m='1'/>
+          <TableContainer>
+  <Table variant='simple'>
+    <TableCaption>Imperial to metric conversion factors</TableCaption>
+    <Thead>
+      <Tr>
+        <Th>Zone</Th>
+        <Th>Pallet</Th>
+        <Th></Th>
+      </Tr>
+    </Thead>
+    <Tbody>
+      {zoneSelected && zoneSelected.length > 0 ? ( <Tr>
+        <Td>{zoneSelected?.[0]?.zone || 'N/A'}</Td>
+        <Td>{zoneSelected?.length || 0}</Td>
+        <Td>
+          <Button onClick={() => {/* Your onClick logic here */}}>
+            Select Location
+          </Button>
+        </Td>
+      </Tr>):(
+        <div>Not avaliable</div>
+      )}
+     
+    </Tbody>
+  </Table>
+</TableContainer>
+
+
+
+
+
+
+</Box>
+
+</GridItem>
+
+    
+
+
+    </Grid>
     </div>
+
+
+
     </TabPanel>
     <TabPanel>
         

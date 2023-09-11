@@ -34,27 +34,27 @@ import {
 } from '@chakra-ui/react'
 import Map_a from '../public/assets/img/map_w113.png';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
-import { productListState } from './Atoms';
+import { productListState, productSelectedState, zoneSelectedState } from './Atoms';
 import { fetchProductList } from './Selectors';
 import  {zone_113a, colname_113a} from './zones/113/zone_113a.js'
 import { useRecoilState } from 'recoil';
 
-const Map_test = () => {
+const Map_select = () => {
 
 
   ///// product table //////
   const setProductList = useSetRecoilState(productListState);
   const products = useRecoilValue(fetchProductList);
   /////////////////////////
-  const [productInput, setProductInput] = useState("");
-  const [isLabChecked, setIsLabChecked] = useState(false);
-  const [isLockChecked, setIsLockChecked] = useState(false);  
+  const [productSelected, setProductSelected] = useRecoilState(productSelectedState);
+  const [zoneSelected, setZoneSelected] = useRecoilState(zoneSelectedState);
   const toast = useToast();
   const [zone_v, setZone_v] = useState(colname_113a);
   //// zone attr /////
   const [hoveredZone, setHoveredZone] = useState('');
   const [multiclickedZone, setmultiClickedZone] = useState([]);
   const [clickedZone, setClickedZone] = useState('');
+  const [tagClicked,setTagClicked] = useState('');
   const [editMode, setEditMode] = useState(false);
   ////////////////////
   const [showAlternateCard, setShowAlternateCard] = useState(false);
@@ -110,6 +110,15 @@ const Map_test = () => {
 
  //////////////////
  const [isDisabled, setIsDisabled] = useState(true);
+
+ useEffect(() => {
+  if (productSelected) {
+    setmultizoneState(prevState => ({
+      ...prevState,
+      productInput: productSelected.id // or productSelected.id if you just want the ID
+    }));
+  }
+}, [productSelected]);
 
 const handleKeyUp = (e) => {
   const newProductInput = e.target.value;
@@ -168,12 +177,21 @@ const toggleLockChecked = () => {
     }
   }, [multiclickedZone, zones, clickedZone]);
 
+  useEffect(() =>{
+    console.log(tagClicked)
+  },[tagClicked] )
+  
+  const handleTagClick = (zoneId) => {
+    const tagclicked = zones.find(item => item.mapid === zoneId);
+    setTagClicked(tagclicked)
+  
+  }
   const handleZoneClick = (zoneId) => {
     if (zoneId === null) {
       setClickedZone(null);
       return;
     }
-    
+    console.log(zoneId)
     const zone_mapid = parseInt(zoneId);
     const clickedZone = zones.find(item => item.mapid === zoneId);
     
@@ -215,6 +233,7 @@ const toggleLockChecked = () => {
     setEditedValues({});
     setShowAlternateCard(false);
     setmultiClickedZone([]);
+    setTagClicked(null)
     setmultizoneState({
       productInput: "",
       isLabChecked: false,
@@ -223,6 +242,10 @@ const toggleLockChecked = () => {
     });
     
   };
+
+  const handleTagCancel = () => {
+    setTagClicked(null)
+  }
 
 ////////////////////////////////////////
 
@@ -327,7 +350,20 @@ const createpayloadsinglezone = (newFormdata) => {
 
 };
 
+useEffect(() => {
+  console.log(multiclickedZone,'multiZone')
+  if (multiclickedZone.length > 1) {
+    setShowAlternateCard(true);
+  }
+  else {
+    setShowAlternateCard(false);
+  }
+  console.log(showAlternateCard,'window')
+}, [multiclickedZone]);
 
+useEffect(() =>{
+  console.log(zoneSelected,'zoneSelected')
+},[zoneSelected])
 
 const updateFormData = async () => {
   let payload
@@ -343,6 +379,8 @@ const updateFormData = async () => {
         // ...
       };
         payload = createpayloadmultizone(zones_filter,defaultLevels)
+        setZoneSelected(payload)
+       
     } 
 
   else {
@@ -458,6 +496,8 @@ const handleEditMode = async e => {
   
   if (editMode) {
     updateSuccessful = await updateFormData();
+
+
       // รับค่าที่ส่งกลับ
   } else {
     setEditedValues(clickedZone);
@@ -599,10 +639,6 @@ const getBackgroundColor = (zone) => {
   return (
     
     <div>
-        <Box mb='2' height='auto'>
-      <Heading size='md' style={{ padding: '1rem' }}>Warehouse 113 </Heading>
-      <Divider />
-    </Box>
        <Grid
   h='50rem'
   templateRows='repeat(2, 1fr)'
@@ -614,11 +650,14 @@ const getBackgroundColor = (zone) => {
 
 <GridItem rowSpan={2} colSpan={3}>  
 
+
 {isLoading ? (
         <Skeleton height="100%" />
       ) : (
 
-          <Box maxW='100%' style={{ height: '100%', overflow: 'auto' }}>
+          <Box p='5' maxW='100%' style={{ height: '100%', overflow: 'auto' }} bg='white'>
+            <Heading >Warehouse 113 </Heading>
+<Divider m='2' />
             <div
               style={{
                 width: '2080px',
@@ -701,7 +740,7 @@ const getBackgroundColor = (zone) => {
 
       <CardBody  >
 
-      {showAlternateCard ? (
+ 
          <VStack
          
          spacing={2}
@@ -714,7 +753,7 @@ const getBackgroundColor = (zone) => {
         <Box>
         <Text fontSize='md' > Mapid</Text>
         <Box p='4' w='100%' minH='10rem' border='1px solid lightgray' borderRadius={5}>
-        <SimpleGrid columns={4} spacing={1} >
+        <SimpleGrid columns={5} spacing={1} >
   {multiclickedZone.map((zone, index) => (
     <Box >
     <Tag
@@ -723,6 +762,7 @@ const getBackgroundColor = (zone) => {
       variant='solid'
       colorScheme='green'
       key={index}
+      onClick={() => handleTagClick(zone)}
        // ถ้าคุณต้องการเพิ่ม spacing ระหว่างบรรทัด
     >
       <TagLabel>{zone}</TagLabel>
@@ -735,30 +775,23 @@ const getBackgroundColor = (zone) => {
 </Box>
 
     <Box>
-       {editMode ? (
+       {productSelected ? (
         <>
         <Box p='1'm='auto'>
               <Text fontSize='md' > Product</Text>
               <Input
   list="products"
   size='sm'
-  value={multizoneState.productInput}
-  onChange={(e) => setmultizoneState({ ...multizoneState, productInput: e.target.value })}
-  onKeyUp={handleKeyUp}
-  autocomplete="off"
+  value={productSelected.id}
+  readOnly
 />
 
-<datalist id="products">
-  {products.map((product) => (
-    <option key={product.id} value={product.name} />
-  ))}
-</datalist>
 <HStack spacing={5}>
-<Checkbox isDisabled={multizoneState.isDisabled} onChange={toggleLabChecked}>
+<Checkbox  onChange={toggleLabChecked}>
   Lab
 </Checkbox>
 
-<Checkbox isDisabled={multizoneState.isDisabled} onChange={toggleLockChecked}>
+<Checkbox  onChange={toggleLockChecked}>
   Lock
 </Checkbox>
 
@@ -769,31 +802,7 @@ const getBackgroundColor = (zone) => {
               
        ): (
       
-       
-        <Box p='1'm='auto'>
-              <Text fontSize='md' opacity='0.4'> Product</Text>
-              <Input
-  list="products"
-  size='sm'
-  disabled
-/>
-
-<datalist id="products">
-  {products.map((product) => (
-    <option key={product.id} value={product.name} />
-  ))}
-</datalist>
-<HStack spacing={5}>
-<Checkbox disabled>
-  Lab
-</Checkbox>
-
-<Checkbox disabled>
-  Lock
-</Checkbox>
-
-</HStack>
-              </Box>
+        <span>โปรดเลือกชนิดสินค้า</span>
 
   
        )}
@@ -802,8 +811,43 @@ const getBackgroundColor = (zone) => {
        
           </VStack>
 
-      ) : ( 
-        <VStack
+
+
+
+      </CardBody>
+      <Divider />
+      <CardFooter>
+     
+     {productSelected ? (
+  <ButtonGroup spacing='2'>
+    <Button variant='solid' colorScheme='blue' onClick={handleEditMode} >
+      {editMode ? 'Save' : 'Edit'}
+    </Button>
+    <Button variant='ghost' colorScheme='blue' onClick={handleCancelClick}>
+      Cancel
+    </Button>
+  </ButtonGroup> ) : (
+
+<ButtonGroup spacing='2'>
+
+</ButtonGroup>
+
+  )}
+
+
+
+        
+      </CardFooter>
+      </form>
+    </Card>
+
+
+
+
+</GridItem>
+<GridItem rowSpan={1} colSpan={2} bg = 'white' >
+
+<VStack
         divider={<StackDivider borderColor='gray.200' />}
         spacing={1}
         align='stretch'
@@ -827,8 +871,8 @@ const getBackgroundColor = (zone) => {
  
 
 {['5','4','3','2','1'].map(level => (
-<HStack key={level}>
-  <Text fontSize='md' w='20%'> {`L.${level}`} </Text>
+<HStack key={level} textAlign='center' >
+  <Text fontSize='md' w='20%'> {`Level ${level}`} </Text>
   {editMode ? (
     <Box w='100%'>
        <HStack>
@@ -874,18 +918,18 @@ size='sm'
 name={level}
 value={
   (hoveredZone?.levels?.[level]?.product_name) || 
-  (clickedZone?.levels?.[level]?.product_name) || 
+  (tagClicked?.levels?.[level]?.product_name) || 
   ''
 }
 readOnly
 />
-
+  <Checkbox name={level} defaultChecked isDisabled={!tagClicked}> </Checkbox>
       
-      {(hoveredZone?.levels?.[level]?.lock || clickedZone?.levels?.[level]?.lock) && 
+      {(hoveredZone?.levels?.[level]?.lock || tagClicked?.levels?.[level]?.lock) && 
   <Badge colorScheme='red'>lock</Badge>
 }
 
-{(hoveredZone?.levels?.[level]?.lab || clickedZone?.levels?.[level]?.lab) && 
+{(hoveredZone?.levels?.[level]?.lab || tagClicked?.levels?.[level]?.lab) && 
   <Badge variant='outline' colorScheme='green' >lab</Badge>
 }
       </HStack>
@@ -896,43 +940,18 @@ readOnly
 
 
         <Text style={{textAlign:'center'}}>Ground</Text>
+     
+        <ButtonGroup spacing='2'>
+    <Button variant='solid' colorScheme='blue' onClick={handleEditMode} >
+      Save
+    </Button>
+    <Button variant='ghost' colorScheme='blue' onClick={handleTagCancel}>
+      Cancel
+    </Button>
+  </ButtonGroup>
       </VStack>
 
-      )}
-      </CardBody>
-      <Divider />
-      <CardFooter>
-      {multiclickedZone.length >= 1 ? (
-  <ButtonGroup spacing='2'>
-    <Button variant='solid' colorScheme='blue' onClick={handleEditMode} >
-      {editMode ? 'Save' : 'Edit'}
-    </Button>
-    <Button variant='ghost' colorScheme='blue' onClick={handleCancelClick}>
-      Cancel
-    </Button>
-  </ButtonGroup>
-) : (
-  <ButtonGroup spacing='2'>
-    <Button variant='solid' colorScheme='blue' isDisabled>
-      Edit
-    </Button>
-    <Button variant='ghost' colorScheme='blue' isDisabled>
-      Cancel
-    </Button>
-  </ButtonGroup>
-)}
-
-
-        
-      </CardFooter>
-      </form>
-    </Card>
-
-
-
-
 </GridItem>
-<GridItem rowSpan={1} colSpan={1} bg = 'tomato' h='80%'></GridItem>
     
 
 
@@ -941,4 +960,4 @@ readOnly
   );
 };
 
-export default Map_test;
+export default Map_select;
