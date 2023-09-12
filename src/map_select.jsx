@@ -186,6 +186,10 @@ const toggleLockChecked = () => {
     setTagClicked(tagclicked)
   
   }
+
+  const handleSaveClick = () => {
+
+  }
   const handleZoneClick = (zoneId) => {
     if (zoneId === null) {
       setClickedZone(null);
@@ -217,6 +221,7 @@ const toggleLockChecked = () => {
   
   useEffect(() => {
     console.log(multiclickedZone,'multiZone')
+
     if (multiclickedZone.length > 1) {
       setShowAlternateCard(true);
     }
@@ -311,9 +316,10 @@ function getProductIdByName(productName) {
 ////////////// HANDLE SUBMIT ////////////////////////////// HANDLE SUBMIT ////////////////////////////// HANDLE SUBMIT ////////////////////////////// HANDLE SUBMIT ////////////////
 
 
-const createpayloadmultizone = (zones_filter,defaultLevels) => {
+const createpayloadmultizone = (zones_filter,defaultLevels,checkedLevels) => {
     return zones_filter.flatMap(zone => {
       return Object.keys(defaultLevels).map(level => {
+        if (checkedLevels.includes(parseInt(level))) {
         const levels_data = defaultLevels[level];
         const productId = getProductIdByName(levels_data.product);
         return {
@@ -326,6 +332,19 @@ const createpayloadmultizone = (zones_filter,defaultLevels) => {
           lock: levels_data.lock,
           product: productId,
         };
+      } else {
+        return {
+          zone: zone.zone,
+          column: zone.col,
+          row: zone.row,
+          mapid: zone.mapid,
+          level: parseInt(level),
+          lab: false,
+          lock: false,
+          product: null,
+
+        }
+      }
       });
     });
     
@@ -547,10 +566,10 @@ const getBackgroundColor = (zone) => {
       setIsLoading(true);
       try {
          setProductList(products);
-        const response = await fetch('http://127.0.0.1:8000/api/storage_info/');
+        const response = await fetch('http://127.0.0.1:8000/api/test/');
         const fetchedData = await response.json();
         // console.log(fetchedData,'fetched')
-        console.log(fetchedData,'response')
+        console.log(response,'response')
         
         const newZones = zones.map(zone => {
           const updatedDataForZone = fetchedData.filter(data => data.mapid === zone.mapid);
@@ -564,7 +583,7 @@ const getBackgroundColor = (zone) => {
             if (latestRecordForLevel) {
               levels[i] = {
                 product: latestRecordForLevel.product,
-                product_name: latestRecordForLevel.product_name,
+                product_name: latestRecordForLevel.product[1],
                 lock: latestRecordForLevel.product === null ? false : latestRecordForLevel.lock,
                 lab: latestRecordForLevel.product === null ? false : latestRecordForLevel.lab
               };
